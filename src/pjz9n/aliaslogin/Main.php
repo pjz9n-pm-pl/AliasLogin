@@ -25,7 +25,10 @@ namespace pjz9n\aliaslogin;
 
 use CortexPE\Commando\exception\HookAlreadyRegistered;
 use CortexPE\Commando\PacketHooker;
+use pjz9n\aliaslogin\language\LanguageHolder;
+use pocketmine\lang\BaseLang;
 use pocketmine\plugin\PluginBase;
+use pocketmine\utils\Config;
 
 class Main extends PluginBase
 {
@@ -37,5 +40,20 @@ class Main extends PluginBase
         if (!PacketHooker::isRegistered()) {
             PacketHooker::register($this);
         }
+
+        new Config($this->getDataFolder() . "config.yml", Config::YAML, [
+            "language" => "default",
+        ]);
+
+        $languageCode = ($configLanguage = $this->getConfig()->get("language", "default")) === "default"
+            ? $this->getServer()->getLanguage()->getLang()
+            : $configLanguage;
+        $localePath = $this->getFile() . "resources/locale/";
+        $language = new BaseLang($languageCode, $localePath);
+        LanguageHolder::set($language);
+        $this->getLogger()->info($language->translateString("language.selected", [
+            $language->getName(),
+            $language->getLang(),
+        ]));
     }
 }
