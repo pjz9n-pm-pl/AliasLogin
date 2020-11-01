@@ -25,13 +25,19 @@ namespace pjz9n\aliaslogin;
 
 use CortexPE\Commando\exception\HookAlreadyRegistered;
 use CortexPE\Commando\PacketHooker;
+use pjz9n\aliaslogin\command\AliasLoginCommand;
+use pjz9n\aliaslogin\flag\AliasLoginFlag;
 use pjz9n\aliaslogin\language\LanguageHolder;
+use pjz9n\aliaslogin\listener\AliasLoginListener;
 use pocketmine\lang\BaseLang;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 
 class Main extends PluginBase
 {
+    /** @var Config */
+    private $aliasLoginFlagConfig;
+
     /**
      * @throws HookAlreadyRegistered
      */
@@ -43,6 +49,7 @@ class Main extends PluginBase
 
         new Config($this->getDataFolder() . "config.yml", Config::YAML, [
             "language" => "default",
+            "only-console" => true,
         ]);
 
         $languageCode = ($configLanguage = $this->getConfig()->get("language", "default")) === "default"
@@ -55,5 +62,15 @@ class Main extends PluginBase
             $language->getName(),
             $language->getLang(),
         ]));
+        $this->aliasLoginFlagConfig = new Config($this->getDataFolder() . "alias-login-flag.json");
+        AliasLoginFlag::fromArray($this->aliasLoginFlagConfig->getAll());
+        $this->getServer()->getPluginManager()->registerEvents(new AliasLoginListener(), $this);
+        $this->getServer()->getCommandMap()->register($this->getName(), new AliasLoginCommand($this));
+    }
+
+    public function onDisable(): void
+    {
+        $this->aliasLoginFlagConfig->setAll(AliasLoginFlag::toArray());
+        $this->aliasLoginFlagConfig->save();
     }
 }
