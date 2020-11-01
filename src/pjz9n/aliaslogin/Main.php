@@ -23,9 +23,19 @@ declare(strict_types=1);
 
 namespace pjz9n\aliaslogin;
 
+use CortexPE\Commando\exception\HookAlreadyRegistered;
+use CortexPE\Commando\PacketHooker;
 use pocketmine\plugin\PluginBase;
 
 class Main extends PluginBase
 {
-    //
+    /**
+     * @throws HookAlreadyRegistered
+     */
+    public function onEnable(): void
+    {
+        if (!PacketHooker::isRegistered()) {
+            PacketHooker::register($this);
+        }
+    }
 }

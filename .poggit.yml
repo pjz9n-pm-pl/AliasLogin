@@ -5,4 +5,7 @@ branches:
 projects:
   AliasLogin:
     path: ""
+    libs:
+      - src: CortexPE/Commando/Commando
+        version: 2.1.1
 ...
