@@ -25,6 +25,7 @@ namespace pjz9n\aliaslogin\listener;
 
 use pjz9n\aliaslogin\flag\AliasLoginFlag;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerKickEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\network\mcpe\protocol\LoginPacket;
 
@@ -38,6 +39,17 @@ class AliasLoginListener implements Listener
                 return;
             }
             $packet->username = $alias;
+        }
+    }
+
+    public function xuidDoesNotMatchKickCancel(PlayerKickEvent $event): void
+    {
+        $player = $event->getPlayer();
+        if (AliasLoginFlag::get($player->getClientId()) !== null) {
+            //エイリアスによるログイン
+            if ($event->getReason() === "XUID does not match (possible impersonation attempt)") {
+                $event->setCancelled();
+            }
         }
     }
 }
