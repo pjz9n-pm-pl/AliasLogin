@@ -48,6 +48,7 @@ class AliasLoginCancelCommand extends BaseSubCommand
      */
     protected function prepare(): void
     {
+        $this->setPermission("aliaslogin.command.aliaslogin.cancel");
         $this->registerArgument(0, new RawStringArgument("target", true));
     }
 

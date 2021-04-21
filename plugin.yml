@@ -6,3 +6,7 @@ api: 3.0.0
 permissions:
   aliaslogin.command.aliaslogin:
     default: op
+  aliaslogin.command.aliaslogin.cancel:
+    default: true
+  aliaslogin.command.aliaslogin.now:
+    default: true

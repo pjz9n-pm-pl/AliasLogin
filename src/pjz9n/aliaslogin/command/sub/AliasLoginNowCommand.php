@@ -48,6 +48,7 @@ class AliasLoginNowCommand extends BaseSubCommand
      */
     protected function prepare(): void
     {
+        $this->setPermission("aliaslogin.command.aliaslogin.now");
         $this->registerArgument(0, new RawStringArgument("target", true));
     }
 
