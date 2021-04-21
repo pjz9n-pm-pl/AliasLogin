@@ -24,10 +24,13 @@ declare(strict_types=1);
 namespace pjz9n\aliaslogin\listener;
 
 use pjz9n\aliaslogin\flag\AliasLoginFlag;
+use pjz9n\aliaslogin\language\LanguageHolder;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerKickEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\network\mcpe\protocol\LoginPacket;
+use pocketmine\utils\TextFormat;
 
 class AliasLoginListener implements Listener
 {
@@ -50,6 +53,14 @@ class AliasLoginListener implements Listener
             if ($event->getReason() === "XUID does not match (possible impersonation attempt)") {
                 $event->setCancelled();
             }
+        }
+    }
+
+    public function sendState(PlayerJoinEvent $event): void
+    {
+        $player = $event->getPlayer();
+        if (AliasLoginFlag::get($player->getClientId()) !== null) {
+            $player->sendMessage(TextFormat::GREEN . LanguageHolder::get()->translateString("aliaslogin.join"));
         }
     }
 }
