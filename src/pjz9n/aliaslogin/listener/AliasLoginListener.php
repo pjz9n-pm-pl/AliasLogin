@@ -28,12 +28,18 @@ use pjz9n\aliaslogin\language\LanguageHolder;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerKickEvent;
+use pocketmine\event\player\PlayerPreLoginEvent;
+use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
+use pocketmine\nbt\tag\NamedTag;
 use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\utils\TextFormat;
 
 class AliasLoginListener implements Listener
 {
+    /** @var NamedTag[]|null[] */
+    private $xuids = [];
+
     public function changeToAliasOnLogin(DataPacketReceiveEvent $event): void
     {
         $packet = $event->getPacket();
@@ -61,6 +67,23 @@ class AliasLoginListener implements Listener
         $player = $event->getPlayer();
         if (AliasLoginFlag::get($player->getClientId()) !== null) {
             $player->sendMessage(TextFormat::GREEN . LanguageHolder::get()->translateString("aliaslogin.join"));
+        }
+    }
+
+    public function saveXuid(PlayerPreLoginEvent $event): void
+    {
+        $player = $event->getPlayer();
+        if ((AliasLoginFlag::get($player->getClientId())) !== null) {
+            //エイリアスによるログイン
+            $this->xuids[$player->getClientId()] = $player->namedtag->getTag("LastKnownXUID");
+        }
+    }
+
+    public function restoreXuid(PlayerQuitEvent $event): void
+    {
+        $player = $event->getPlayer();
+        if (isset($this->xuids[$player->getClientId()])) {
+            $player->namedtag->setTag($this->xuids[$player->getClientId()], true);
         }
     }
 }

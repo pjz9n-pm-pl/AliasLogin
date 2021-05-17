@@ -1,7 +1,7 @@
 name: AliasLogin
 version: 1.0.0
 main: pjz9n\aliaslogin\Main
-api: 3.0.0
+api: 3.17.5
 
 permissions:
   aliaslogin.command.aliaslogin:
