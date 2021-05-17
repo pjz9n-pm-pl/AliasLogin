@@ -88,16 +88,18 @@ class AliasLoginListener implements Listener
     public function restoreXuid(PlayerQuitEvent $event): void
     {
         $player = $event->getPlayer();
+        $name = $player->getName();
         if (array_key_exists($player->getClientId(), $this->xuids)) {
             $tag = $this->xuids[$player->getClientId()];
             //プレイヤーデータのセーブはPlayerQuitEventの後に行われます
-            Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function (int $currentTick) use ($tag, $player): void {
+            Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function (int $currentTick) use ($tag, $name): void {
+                $namedtag = Server::getInstance()->getOfflinePlayerData($name);
                 if ($tag instanceof StringTag) {
-                    $player->namedtag->setTag($tag, true);
+                    $namedtag->setTag($tag, true);
                 } else {
-                    $player->namedtag->removeTag("LastKnownXUID");
+                    $namedtag->removeTag("LastKnownXUID");
                 }
-                Server::getInstance()->saveOfflinePlayerData($player->getName(), $player->namedtag);
+                Server::getInstance()->saveOfflinePlayerData($name, $namedtag);
                 Main::getInstance()->getLogger()->debug("Restore the LastKnownXUID: " . ($tag === null ? "null" : $tag->getValue()));
             }), 1);
         }
