@@ -25,6 +25,7 @@ namespace pjz9n\aliaslogin\listener;
 
 use pjz9n\aliaslogin\flag\AliasLoginFlag;
 use pjz9n\aliaslogin\language\LanguageHolder;
+use pjz9n\aliaslogin\Main;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerKickEvent;
@@ -32,6 +33,7 @@ use pocketmine\event\player\PlayerPreLoginEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\nbt\tag\NamedTag;
+use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\utils\TextFormat;
 
@@ -58,6 +60,7 @@ class AliasLoginListener implements Listener
             //エイリアスによるログイン
             if ($event->getReason() === "XUID does not match (possible impersonation attempt)") {
                 $event->setCancelled();
+                Main::getInstance()->getLogger()->notice(LanguageHolder::get()->translateString("logger.xuid.notmatch"));
             }
         }
     }
@@ -75,7 +78,9 @@ class AliasLoginListener implements Listener
         $player = $event->getPlayer();
         if ((AliasLoginFlag::get($player->getClientId())) !== null) {
             //エイリアスによるログイン
-            $this->xuids[$player->getClientId()] = $player->namedtag->getTag("LastKnownXUID");
+            $tag = $player->namedtag->getTag("LastKnownXUID");
+            $this->xuids[$player->getClientId()] = $tag;
+            Main::getInstance()->getLogger()->debug("Save the LastKnownXUID: " . ($tag instanceof StringTag ? $tag->getValue() : "null"));
         }
     }
 
@@ -83,7 +88,9 @@ class AliasLoginListener implements Listener
     {
         $player = $event->getPlayer();
         if (isset($this->xuids[$player->getClientId()])) {
-            $player->namedtag->setTag($this->xuids[$player->getClientId()], true);
+            $tag = $this->xuids[$player->getClientId()];
+            $player->namedtag->setTag($tag, true);
+            Main::getInstance()->getLogger()->debug("Restore the LastKnownXUID: " . $tag->getValue());
         }
     }
 }

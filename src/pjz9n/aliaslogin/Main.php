@@ -35,8 +35,21 @@ use pocketmine\utils\Config;
 
 class Main extends PluginBase
 {
+    /** @var self */
+    private static $instance;
+
+    public static function getInstance(): self
+    {
+        return self::$instance;
+    }
+
     /** @var Config */
     private $aliasLoginFlagConfig;
+
+    public function onLoad(): void
+    {
+        self::$instance = $this;
+    }
 
     /**
      * @throws HookAlreadyRegistered
