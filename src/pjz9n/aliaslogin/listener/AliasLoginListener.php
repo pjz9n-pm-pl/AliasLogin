@@ -32,14 +32,13 @@ use pocketmine\event\player\PlayerKickEvent;
 use pocketmine\event\player\PlayerPreLoginEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
-use pocketmine\nbt\tag\NamedTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\utils\TextFormat;
 
 class AliasLoginListener implements Listener
 {
-    /** @var NamedTag[]|null[] */
+    /** @var StringTag[]|null[] */
     private $xuids = [];
 
     public function changeToAliasOnLogin(DataPacketReceiveEvent $event): void
@@ -78,19 +77,24 @@ class AliasLoginListener implements Listener
         $player = $event->getPlayer();
         if ((AliasLoginFlag::get($player->getClientId())) !== null) {
             //エイリアスによるログイン
-            $tag = $player->namedtag->getTag("LastKnownXUID");
+            /** @var StringTag|null $tag */
+            $tag = $player->namedtag->getTag("LastKnownXUID", StringTag::class);
             $this->xuids[$player->getClientId()] = $tag;
-            Main::getInstance()->getLogger()->debug("Save the LastKnownXUID: " . ($tag instanceof StringTag ? $tag->getValue() : "null"));
+            Main::getInstance()->getLogger()->debug("Save the LastKnownXUID: " . ($tag === null ? "null" : $tag->getValue()));
         }
     }
 
     public function restoreXuid(PlayerQuitEvent $event): void
     {
         $player = $event->getPlayer();
-        if (isset($this->xuids[$player->getClientId()])) {
+        if (array_key_exists($player->getClientId(), $this->xuids)) {
             $tag = $this->xuids[$player->getClientId()];
-            $player->namedtag->setTag($tag, true);
-            Main::getInstance()->getLogger()->debug("Restore the LastKnownXUID: " . $tag->getValue());
+            if ($tag instanceof StringTag) {
+                $player->namedtag->setTag($tag, true);
+            } else {
+                $player->namedtag->removeTag("LastKnownXUID");
+            }
+            Main::getInstance()->getLogger()->debug("Restore the LastKnownXUID: " . ($tag === null ? "null" : $tag->getValue()));
         }
     }
 }
