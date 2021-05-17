@@ -34,6 +34,8 @@ use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\protocol\LoginPacket;
+use pocketmine\scheduler\ClosureTask;
+use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
 class AliasLoginListener implements Listener
@@ -76,9 +78,8 @@ class AliasLoginListener implements Listener
     {
         $player = $event->getPlayer();
         if ((AliasLoginFlag::get($player->getClientId())) !== null) {
-            //エイリアスによるログイン
-            /** @var StringTag|null $tag */
-            $tag = $player->namedtag->getTag("LastKnownXUID", StringTag::class);
+            //エイリアスによるログイン/** @var StringTag|null $tag */;
+            $tag = Server::getInstance()->getOfflinePlayerData($player->getName())->getTag("LastKnownXUID", StringTag::class);
             $this->xuids[$player->getClientId()] = $tag;
             Main::getInstance()->getLogger()->debug("Save the LastKnownXUID: " . ($tag === null ? "null" : $tag->getValue()));
         }
@@ -89,12 +90,16 @@ class AliasLoginListener implements Listener
         $player = $event->getPlayer();
         if (array_key_exists($player->getClientId(), $this->xuids)) {
             $tag = $this->xuids[$player->getClientId()];
-            if ($tag instanceof StringTag) {
-                $player->namedtag->setTag($tag, true);
-            } else {
-                $player->namedtag->removeTag("LastKnownXUID");
-            }
-            Main::getInstance()->getLogger()->debug("Restore the LastKnownXUID: " . ($tag === null ? "null" : $tag->getValue()));
+            //プレイヤーデータのセーブはPlayerQuitEventの後に行われます
+            Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function (int $currentTick) use ($tag, $player): void {
+                if ($tag instanceof StringTag) {
+                    $player->namedtag->setTag($tag, true);
+                } else {
+                    $player->namedtag->removeTag("LastKnownXUID");
+                }
+                Server::getInstance()->saveOfflinePlayerData($player->getName(), $player->namedtag);
+                Main::getInstance()->getLogger()->debug("Restore the LastKnownXUID: " . ($tag === null ? "null" : $tag->getValue()));
+            }), 1);
         }
     }
 }
