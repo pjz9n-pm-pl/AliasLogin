@@ -57,7 +57,11 @@ class AliasLoginListener implements Listener
     public function xuidDoesNotMatchKickCancel(PlayerKickEvent $event): void
     {
         $player = $event->getPlayer();
-        if (AliasLoginFlag::get($player->getClientId()) !== null) {
+        $clientId = $player->getClientId();
+        if ($clientId === null) {
+            return;//Normally returns an int, but an incomplete player returns null(blame pmmp3.0)
+        }
+        if (AliasLoginFlag::get($clientId) !== null) {
             //エイリアスによるログイン
             if ($event->getReason() === "XUID does not match (possible impersonation attempt)") {
                 $event->setCancelled();
@@ -69,7 +73,11 @@ class AliasLoginListener implements Listener
     public function sendState(PlayerJoinEvent $event): void
     {
         $player = $event->getPlayer();
-        if (AliasLoginFlag::get($player->getClientId()) !== null) {
+        $clientId = $player->getClientId();
+        if ($clientId === null) {
+            return;//Normally returns an int, but an incomplete player returns null(blame pmmp3.0)
+        }
+        if (AliasLoginFlag::get($clientId) !== null) {
             $player->sendMessage(TextFormat::GREEN . LanguageHolder::get()->translateString("aliaslogin.join"));
         }
     }
@@ -77,10 +85,14 @@ class AliasLoginListener implements Listener
     public function saveXuid(PlayerPreLoginEvent $event): void
     {
         $player = $event->getPlayer();
-        if ((AliasLoginFlag::get($player->getClientId())) !== null) {
+        $clientId = $player->getClientId();
+        if ($clientId === null) {
+            return;//Normally returns an int, but an incomplete player returns null(blame pmmp3.0)
+        }
+        if ((AliasLoginFlag::get($clientId)) !== null) {
             //エイリアスによるログイン/** @var StringTag|null $tag */;
             $tag = Server::getInstance()->getOfflinePlayerData($player->getName())->getTag("LastKnownXUID", StringTag::class);
-            $this->xuids[$player->getClientId()] = $tag;
+            $this->xuids[$clientId] = $tag;
             Main::getInstance()->getLogger()->debug("Save the LastKnownXUID: " . ($tag === null ? "null" : $tag->getValue()));
         }
     }
@@ -89,8 +101,12 @@ class AliasLoginListener implements Listener
     {
         $player = $event->getPlayer();
         $name = $player->getName();
-        if (array_key_exists($player->getClientId(), $this->xuids)) {
-            $tag = $this->xuids[$player->getClientId()];
+        $clientId = $player->getClientId();
+        if ($clientId === null) {
+            return;//Normally returns an int, but an incomplete player returns null(blame pmmp3.0)
+        }
+        if (array_key_exists($clientId, $this->xuids)) {
+            $tag = $this->xuids[$clientId];
             //プレイヤーデータのセーブはPlayerQuitEventの後に行われます
             Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function (int $currentTick) use ($tag, $name): void {
                 $namedtag = Server::getInstance()->getOfflinePlayerData($name);
